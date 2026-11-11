@@ -14,7 +14,7 @@ flowchart LR
   Agent --> Recall[recall tool]
   Agent --> Search[webSearch tool]
   Recall --> DB
-  Search --> Provider[Tavily API]
+  Search --> Provider[Exa API]
   Route -. after response .-> Writer[Memory writer]
   Writer --> DB
 ```

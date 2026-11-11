@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test:unit": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test lib/config-schema.test.mts lib/time.test.mts lib/identity-token.test.mts",
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
@@ -15,7 +16,7 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
-    "@ai-sdk/openai": "^4.0.114",
+    "@ai-sdk/groq": "^4.0.81",
     "@ai-sdk/react": "^4.0.173",
     "@neondatabase/serverless": "^1.2.0",
     "ai": "^7.0.169",
