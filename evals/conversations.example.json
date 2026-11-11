@@ -1,0 +1,14 @@
+[
+  {
+    "name": "remember-preference",
+    "turns": [
+      { "role": "user", "content": "I prefer TypeScript over Python." },
+      { "role": "assistant", "content": "Noted." },
+      { "role": "user", "content": "Which language do I prefer?" }
+    ],
+    "expect": {
+      "memoryWritten": true,
+      "answerContains": ["TypeScript"]
+    }
+  }
+]
