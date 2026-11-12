@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { createExaSearchProvider, type SearchProvider } from "./search-provider.ts";
-import { createTurnState } from "./turn-state.ts";
+import { citedSourceIds, createTurnState } from "./turn-state.ts";
 import { runWebSearch } from "./tools/web-search.ts";
 
 test("Exa provider sends the documented request and validates results", async () => {
@@ -71,4 +71,12 @@ test("web search retries once and degrades visibly", async () => {
   });
   assert.equal(calls, 2);
   assert.equal(turnState.searchCalls[0]?.attempts, 2);
+});
+
+test("citation integrity recognizes plain and decorative model brackets", () => {
+  assert.deepEqual(citedSourceIds("One [s1], two 【s2】, again [S1]."), [
+    "s1",
+    "s2",
+    "s1",
+  ]);
 });

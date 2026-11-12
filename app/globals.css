@@ -72,7 +72,7 @@
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --radius: 0.75rem;
+  --radius: 0.375rem;
   --sidebar: oklch(0.958 0.018 75);
   --sidebar-foreground: oklch(0.28 0.022 52);
   --sidebar-primary: oklch(0.34 0.03 49);
@@ -131,4 +131,110 @@
 
 ::selection {
   background: oklch(0.84 0.06 72 / 55%);
+}
+
+/* ── code highlighting (github-inspired, tuned to the warm palette) ── */
+.hljs {
+  color: var(--foreground);
+}
+.hljs-comment,
+.hljs-quote {
+  color: oklch(0.51 0.018 58);
+  font-style: italic;
+}
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-doctag,
+.hljs-name {
+  color: oklch(0.5 0.19 27);
+}
+.hljs-string,
+.hljs-regexp,
+.hljs-addition {
+  color: oklch(0.38 0.09 150);
+}
+.hljs-title,
+.hljs-title.function_,
+.hljs-title.class_,
+.hljs-title.class_.inherited__ {
+  color: oklch(0.44 0.14 292);
+}
+.hljs-number,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-link,
+.hljs-built_in,
+.hljs-selector-id,
+.hljs-selector-class {
+  color: oklch(0.45 0.13 250);
+}
+.hljs-attr,
+.hljs-attribute,
+.hljs-variable,
+.hljs-template-variable,
+.hljs-params,
+.hljs-meta {
+  color: oklch(0.5 0.13 60);
+}
+.hljs-tag {
+  color: oklch(0.4 0.11 150);
+}
+.hljs-emphasis {
+  font-style: italic;
+}
+.hljs-strong {
+  font-weight: 600;
+}
+.hljs-deletion {
+  color: oklch(0.45 0.19 27);
+}
+
+.dark .hljs {
+  color: oklch(0.93 0.014 75);
+}
+.dark .hljs-comment,
+.dark .hljs-quote {
+  color: oklch(0.69 0.018 70);
+}
+.dark .hljs-keyword,
+.dark .hljs-selector-tag,
+.dark .hljs-literal,
+.dark .hljs-doctag,
+.dark .hljs-name {
+  color: oklch(0.74 0.15 30);
+}
+.dark .hljs-string,
+.dark .hljs-regexp,
+.dark .hljs-addition {
+  color: oklch(0.83 0.09 145);
+}
+.dark .hljs-title,
+.dark .hljs-title.function_,
+.dark .hljs-title.class_,
+.dark .hljs-title.class_.inherited__ {
+  color: oklch(0.8 0.11 290);
+}
+.dark .hljs-number,
+.dark .hljs-symbol,
+.dark .hljs-bullet,
+.dark .hljs-link,
+.dark .hljs-built_in,
+.dark .hljs-selector-id,
+.dark .hljs-selector-class {
+  color: oklch(0.8 0.11 250);
+}
+.dark .hljs-attr,
+.dark .hljs-attribute,
+.dark .hljs-variable,
+.dark .hljs-template-variable,
+.dark .hljs-params,
+.dark .hljs-meta {
+  color: oklch(0.8 0.12 70);
+}
+.dark .hljs-tag {
+  color: oklch(0.8 0.1 148);
+}
+.dark .hljs-deletion {
+  color: oklch(0.72 0.16 27);
 }

@@ -4,6 +4,7 @@ import {
   toUIMessageStream,
   type UIMessage,
 } from "ai";
+import { after } from "next/server";
 import { ZodError } from "zod";
 import { buildAgentContext } from "@/lib/agent/context";
 import { runAgent } from "@/lib/agent/run";
@@ -25,13 +26,14 @@ import {
 import { config } from "@/lib/config";
 import { getUserId } from "@/lib/identity";
 import { hashUserId, logStructured } from "@/lib/logger";
+import { runMemoryWriter } from "@/lib/memory/writer";
 import {
   chatHistoryQuerySchema,
   chatRequestSchema,
   storedMessagePartsSchema,
 } from "@/lib/schemas";
 
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 function notFoundResponse(): Response {
   return Response.json({ error: "conversation_not_found" }, { status: 404 });
@@ -133,6 +135,21 @@ export async function POST(request: Request): Promise<Response> {
       abortSignal: request.signal,
     },
   );
+  type WriterInput = Parameters<typeof runMemoryWriter>[0];
+  let resolveWriterInput: (input: WriterInput | null) => void = () => {};
+  let writerSettled = false;
+  const writerInput = new Promise<WriterInput | null>((resolve) => {
+    resolveWriterInput = resolve;
+  });
+  const settleWriter = (input: WriterInput | null) => {
+    if (writerSettled) return;
+    writerSettled = true;
+    resolveWriterInput(input);
+  };
+  after(async () => {
+    const input = await writerInput;
+    if (input) await runMemoryWriter(input);
+  });
 
   return createUIMessageStreamResponse({
     stream: toUIMessageStream({
@@ -150,6 +167,7 @@ export async function POST(request: Request): Promise<Response> {
       },
       onEnd: async ({ responseMessage, outcome }) => {
         if (outcome.status !== "completed") {
+          settleWriter(null);
           return;
         }
 
@@ -218,7 +236,13 @@ export async function POST(request: Request): Promise<Response> {
                 .map((call) => call.error),
             ],
           });
+          settleWriter({
+            userId,
+            conversationId,
+            assistantMessageId,
+          });
         } catch (error) {
+          settleWriter(null);
           logStructured("error", "assistant_message_persist_failed", {
             conversationId,
             userHash,

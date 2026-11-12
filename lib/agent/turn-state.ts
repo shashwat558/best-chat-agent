@@ -41,7 +41,7 @@ export function sourceIds(turnState: TurnState): Set<string> {
 }
 
 export function citedSourceIds(text: string): string[] {
-  return [...text.matchAll(/\[(s\d+)\]/gi)].map((match) =>
+  return [...text.matchAll(/[\[【](s\d+)[\]】]/gi)].map((match) =>
     match[1].toLowerCase(),
   );
 }

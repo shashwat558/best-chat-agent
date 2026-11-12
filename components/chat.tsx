@@ -6,6 +6,7 @@ import {
   safeValidateUIMessages,
   type UIMessage,
 } from "ai";
+import { AnimatePresence, motion } from "framer-motion";
 import { ArrowUp, LockKeyhole, Sparkles, Square } from "lucide-react";
 import {
   useEffect,
@@ -18,17 +19,15 @@ import {
 import { z } from "zod";
 import ClaudeSidebar from "@/components/pixel-perfect/claude-sidebar";
 import { AiStatus } from "@/components/ui/ai-status";
+import { AquariumPrompt } from "@/components/ui/aquarium-prompt";
 import { Button } from "@/components/ui/button";
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import {
-  WebSearch,
-  WebSearchCitation,
-  type WebSource,
-} from "@/components/ui/web-search";
+import { WebSearch, type WebSource } from "@/components/ui/web-search";
+import { ChatMarkdown } from "@/components/ui/chat-markdown";
 import { chatHistoryResponseSchema } from "@/lib/schemas";
 
 const ACTIVE_CONVERSATION_KEY = "active-conversation-id";
@@ -108,45 +107,21 @@ function sourcesForMessage(message: UIMessage): Map<string, WebSource> {
   return sources;
 }
 
-function renderTextWithCitations(
-  text: string,
-  sources: ReadonlyMap<string, WebSource>,
-): ReactNode[] {
-  const output: ReactNode[] = [];
-  let previousIndex = 0;
-  for (const match of text.matchAll(/\[(s\d+)\]/gi)) {
-    const index = match.index;
-    output.push(text.slice(previousIndex, index));
-    const source = sources.get(match[1].toLowerCase());
-    output.push(
-      source ? (
-        <WebSearchCitation
-          key={`${index}-${match[1]}`}
-          source={source}
-          index={Number(match[1].slice(1))}
-          className="mx-0.5"
-        />
-      ) : (
-        match[0]
-      ),
-    );
-    previousIndex = index + match[0].length;
-  }
-  output.push(text.slice(previousIndex));
-  return output;
-}
-
 function renderMessagePart(
   part: UIMessage["parts"][number],
   key: string,
   sources: ReadonlyMap<string, WebSource>,
+  role: UIMessage["role"],
 ): ReactNode {
   if (part.type === "text") {
-    return (
-      <p key={key} className="whitespace-pre-wrap text-[15px] leading-7">
-        {renderTextWithCitations(part.text, sources)}
-      </p>
-    );
+    if (role === "user") {
+      return (
+        <p key={key} className="whitespace-pre-wrap text-[15px] leading-7">
+          {part.text}
+        </p>
+      );
+    }
+    return <ChatMarkdown key={key} text={part.text} sources={sources} />;
   }
 
   const parsedPart = webSearchPartSchema.safeParse(part);
@@ -310,10 +285,24 @@ function ChatSession({
   }, [conversationId, setMessages]);
 
   const busy = status === "submitted" || status === "streaming";
-  const firstUserMessage = messages.find((message) => message.role === "user");
-  const currentTitle = firstUserMessage
-    ? messageText(firstUserMessage).slice(0, 48)
-    : "";
+  const started = historyStatus === "ready" && messages.length > 0;
+  const composerInputRef = useRef<HTMLTextAreaElement>(null);
+  const [listTick, setListTick] = useState(0);
+  const wasBusy = useRef(false);
+
+  useEffect(() => {
+    if (started) {
+      composerInputRef.current?.focus({ preventScroll: true });
+    }
+  }, [started]);
+
+  // refetch the sidebar list once a turn settles (new/renamed conversation)
+  useEffect(() => {
+    if (wasBusy.current && !busy) {
+      setListTick((tick) => tick + 1);
+    }
+    wasBusy.current = busy;
+  }, [busy]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
@@ -329,21 +318,23 @@ function ChatSession({
       style={{ "--sidebar-width": "17rem" } as React.CSSProperties}
     >
       <ClaudeSidebar
-        currentTitle={currentTitle || undefined}
+        activeId={conversationId}
+        onSelectConversation={setActiveConversation}
         onNewChat={onNewChat}
+        refreshKey={listTick}
       />
-      <SidebarInset className="h-dvh min-w-0 overflow-hidden bg-background md:my-2 md:mr-2 md:rounded-[22px] md:border md:border-border/70 md:shadow-[0_12px_40px_-30px_rgba(46,37,27,0.45)]">
+      <SidebarInset className="h-dvh min-w-0 overflow-hidden bg-background md:my-2 md:mr-2 md:rounded-lg md:border md:border-border/70 md:shadow-sm">
         <header className="flex h-14 shrink-0 items-center justify-between border-b border-border/60 px-3 sm:px-5">
           <div className="flex items-center gap-2">
-            <SidebarTrigger className="rounded-xl text-muted-foreground" />
+            <SidebarTrigger className="rounded-md text-muted-foreground" />
             <div className="flex items-center gap-2 md:hidden">
-              <span className="grid size-6 place-items-center rounded-lg bg-primary text-primary-foreground">
+              <span className="grid size-6 place-items-center rounded-md bg-primary text-primary-foreground">
                 <Sparkles className="size-3" />
               </span>
               <span className="text-sm font-semibold">Hearth</span>
             </div>
           </div>
-          <div className="flex items-center gap-1.5 rounded-full border border-border/60 bg-card/70 px-2.5 py-1 text-[11px] text-muted-foreground shadow-sm">
+          <div className="flex items-center gap-1.5 rounded-md border border-border/60 bg-card/70 px-2.5 py-1 text-xs text-muted-foreground">
             <LockKeyhole className="size-3" />
             <span>Private</span>
           </div>
@@ -353,14 +344,14 @@ function ChatSession({
           aria-live="polite"
           className="min-h-0 flex-1 overflow-y-auto scroll-smooth"
         >
-          <div className="mx-auto flex min-h-full w-full max-w-3xl flex-col gap-7 px-4 py-8 sm:px-8 sm:py-10">
+          <div className="relative mx-auto flex min-h-full w-full max-w-3xl flex-col gap-7 px-4 py-8 sm:px-8 sm:py-10">
             {historyStatus === "loading" && (
               <div className="my-auto flex justify-center">
                 <AiStatus state="thinking" label="Opening your space" />
               </div>
             )}
             {historyStatus === "unavailable" && (
-              <div className="my-auto rounded-2xl border border-destructive/20 bg-destructive/5 p-5 text-center">
+              <div className="my-auto rounded-lg border border-destructive/20 bg-destructive/5 p-5 text-center">
                 <p className="text-sm font-medium">
                   This conversation could not be opened.
                 </p>
@@ -374,44 +365,35 @@ function ChatSession({
               </div>
             )}
             {historyStatus === "ready" && messages.length === 0 && (
-              <div className="my-auto flex flex-col items-center py-12 text-center">
-                <div className="mb-5 grid size-12 place-items-center rounded-[18px] bg-[linear-gradient(145deg,#f2c995,#d99a62)] text-[#5b321c] shadow-[0_12px_30px_-16px_rgba(147,90,43,0.75)]">
-                  <Sparkles className="size-5" />
-                </div>
-                <h1 className="text-2xl font-semibold tracking-[-0.03em] sm:text-[28px]">
-                  What are we exploring?
-                </h1>
-                <p className="mt-2 max-w-sm text-sm leading-6 text-muted-foreground">
-                  Ask a question, unpack an idea, or pick up where you left off.
-                </p>
-                <div className="mt-7 flex max-w-lg flex-wrap justify-center gap-2">
-                  {[
-                    "Help me think through a decision",
-                    "Explain something complex simply",
-                    "Plan a calm, productive week",
-                  ].map((suggestion) => (
-                    <button
-                      key={suggestion}
-                      type="button"
-                      onClick={() => setInput(suggestion)}
-                      className="rounded-full border border-border/70 bg-card/70 px-3.5 py-2 text-xs text-muted-foreground shadow-sm transition-colors hover:bg-card hover:text-foreground"
-                    >
-                      {suggestion}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <AnimatePresence>
+                <motion.div
+                  key="aquarium"
+                  initial={{ opacity: 0, scale: 0.97 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.96, transition: { duration: 0.35, ease: "easeIn" } }}
+                  transition={{ duration: 0.45, ease: "easeOut" }}
+                  className="absolute inset-0 flex items-center justify-center px-3"
+                >
+                  <AquariumPrompt
+                    title="What are we exploring?"
+                    placeholder="Message Hearth…"
+                    onSubmit={(text) => {
+                      void sendMessage({ text });
+                    }}
+                  />
+                </motion.div>
+              </AnimatePresence>
             )}
             {messages.map((message) => {
               const sources = sourcesForMessage(message);
               return (
                 <article
                   key={message.id}
-                  className={
-                    message.role === "user"
-                      ? "ml-auto max-w-[88%] rounded-[20px] rounded-br-md bg-secondary px-4 py-3 text-secondary-foreground sm:max-w-[78%]"
-                      : "w-full"
-                  }
+                    className={
+                      message.role === "user"
+                        ? "ml-auto max-w-[88%] rounded-lg rounded-br-sm bg-secondary px-4 py-2.5 text-secondary-foreground sm:max-w-[78%]"
+                        : "w-full"
+                    }
                 >
                   <div className="flex flex-col gap-3">
                     {message.parts.map((part, index) =>
@@ -419,6 +401,7 @@ function ChatSession({
                         part,
                         `${message.id}-${index}`,
                         sources,
+                        message.role,
                       ),
                     )}
                   </div>
@@ -431,7 +414,7 @@ function ChatSession({
               />
             )}
             {error && (
-              <div className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3">
+              <div className="rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-3">
                 <AiStatus state="error" label="The response failed" />
               </div>
             )}
@@ -439,9 +422,18 @@ function ChatSession({
           </div>
         </section>
 
-        <div className="shrink-0 bg-gradient-to-t from-background via-background to-background/0 px-3 pb-3 pt-2 sm:px-6 sm:pb-5">
+        <AnimatePresence initial={false}>
+          {started && (
+            <motion.div
+              key="composer"
+              initial={{ opacity: 0, y: 28 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 28 }}
+              transition={{ duration: 0.35, ease: "easeOut" }}
+              className="shrink-0 bg-gradient-to-t from-background via-background to-background/0 px-3 pb-3 pt-2 sm:px-6 sm:pb-5"
+            >
           <form
-            className="mx-auto w-full max-w-3xl rounded-[22px] border border-border/80 bg-card p-2 shadow-[0_16px_40px_-24px_rgba(69,52,34,0.55),0_2px_8px_rgba(69,52,34,0.06)] focus-within:border-ring/60"
+            className="mx-auto w-full max-w-3xl rounded-lg border border-border/80 bg-card p-2 shadow-sm focus-within:border-ring/60"
             onSubmit={(event) => {
               event.preventDefault();
               const message = input.trim();
@@ -457,6 +449,7 @@ function ChatSession({
             </label>
             <textarea
               id="chat-input"
+              ref={composerInputRef}
               value={input}
               onChange={(event) => setInput(event.target.value)}
               onKeyDown={(event) => {
@@ -471,7 +464,7 @@ function ChatSession({
               className="max-h-40 min-h-14 w-full resize-none bg-transparent px-2.5 py-2 text-[15px] leading-6 outline-none placeholder:text-muted-foreground/70 disabled:opacity-50"
             />
             <div className="flex items-center justify-between px-1">
-              <span className="hidden text-[10px] text-muted-foreground/70 sm:block">
+              <span className="hidden text-xs text-muted-foreground/80 sm:block">
                 Shift + Enter for a new line
               </span>
               <span className="sm:hidden" />
@@ -499,10 +492,12 @@ function ChatSession({
               )}
             </div>
           </form>
-          <p className="mx-auto mt-2 max-w-3xl text-center text-[10px] text-muted-foreground/65">
+          <p className="mx-auto mt-2 max-w-3xl text-center text-xs text-muted-foreground/80">
             Hearth can make mistakes. Check important information.
           </p>
-        </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </SidebarInset>
     </SidebarProvider>
   );

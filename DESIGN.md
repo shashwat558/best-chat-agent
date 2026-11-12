@@ -55,6 +55,13 @@ flowchart TD
 - Claims retain their queries, retrieved sources, valid time, transaction time,
   status, and supersession chain. Reverification appends a check instead of
   overwriting history.
+- The background writer receives the persisted assistant-message id. Fact
+  extraction sees only the matching user-authored turn, while claim extraction
+  is limited to sources retrieved and cited in that assistant answer.
+- Writer retries are idempotent: facts are keyed through their source message,
+  claims through their assistant message, and daily digests through user and
+  local day. Fact replacements insert the new row and supersede the old row in
+  one database batch.
 - Facts, claims, messages, and digests support keyword retrieval. Facts, claims,
   and digests also use 1536-dimension embeddings and cosine HNSW indexes.
 - Gemini Embedding 2 is explicitly requested at 1536 dimensions. Recall fuses

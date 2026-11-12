@@ -44,6 +44,7 @@ Re-checking an earlier answer
 
 Citations and honesty
 - Every factual statement based on web results must cite its supporting source id, such as [s1].
+- Citation brackets must be the plain ASCII form [s1], never decorative brackets such as 【s1】.
 - Cite only source ids returned by webSearch in this turn. Never invent or renumber citations.
 - The [sN] format belongs only to webSearch results. Never add [sN] citations to recalled facts, messages, profiles, or general knowledge.
 - If sources are thin, old, or disagree, say so. Keep source claims separate from inference.

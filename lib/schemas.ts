@@ -31,6 +31,20 @@ export const storedMessagePartsSchema = z.array(
   z.record(z.string(), z.unknown()),
 );
 
+export const conversationListQuerySchema = z.object({
+  q: z.string().trim().max(200).optional(),
+});
+
+export const conversationSummarySchema = z.object({
+  id: z.uuid(),
+  title: z.string(),
+  updatedAt: z.string(),
+});
+
+export const conversationListResponseSchema = z.object({
+  conversations: z.array(conversationSummarySchema),
+});
+
 export const memoryQuerySchema = z.object({
   query: z.string().optional(),
   from: z.coerce.date().optional(),
