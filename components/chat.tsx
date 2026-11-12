@@ -160,6 +160,29 @@ function renderMessagePart(
       : parsedPart.data.type.startsWith("tool-")
         ? parsedPart.data.type.slice(5)
         : undefined;
+  if (toolName === "recall") {
+    const failed =
+      parsedPart.data.state === "output-error" ||
+      (typeof parsedPart.data.output === "object" &&
+        parsedPart.data.output !== null &&
+        "error" in parsedPart.data.output);
+    if (failed) {
+      return <AiStatus key={key} state="error" label="Memory unavailable" />;
+    }
+    return (
+      <AiStatus
+        key={key}
+        state={
+          parsedPart.data.state === "output-available" ? "done" : "thinking"
+        }
+        label={
+          parsedPart.data.state === "output-available"
+            ? "Memory recalled"
+            : "Recalling memory"
+        }
+      />
+    );
+  }
   if (toolName !== "webSearch") {
     return null;
   }

@@ -1,5 +1,6 @@
 import type { SearchProvider } from "../search-provider";
 import type { TurnState } from "../turn-state";
+import { createRecallTool } from "./recall";
 import { createWebSearchTool } from "./web-search";
 
 export type CreateToolsOptions = Readonly<{
@@ -14,5 +15,10 @@ export function createTools(options: CreateToolsOptions) {
   void options.timezone;
   return {
     webSearch: createWebSearchTool(options.searchProvider, options.turnState),
+    recall: createRecallTool({
+      userId: options.userId,
+      timezone: options.timezone,
+      turnState: options.turnState,
+    }),
   };
 }

@@ -1,4 +1,5 @@
 import type { SearchProviderResult } from "./search-provider";
+import type { RecallItem } from "../memory/types";
 
 export type TurnSource = SearchProviderResult &
   Readonly<{
@@ -17,10 +18,18 @@ export type SearchCallRecord = Readonly<{
 export type TurnState = {
   nextSourceNumber: number;
   searchCalls: SearchCallRecord[];
+  recallCalls: Array<
+    Readonly<{
+      query: string;
+      durationMs: number;
+      results: RecallItem[];
+      error?: "memory_unavailable";
+    }>
+  >;
 };
 
 export function createTurnState(): TurnState {
-  return { nextSourceNumber: 1, searchCalls: [] };
+  return { nextSourceNumber: 1, searchCalls: [], recallCalls: [] };
 }
 
 export function sourceIds(turnState: TurnState): Set<string> {

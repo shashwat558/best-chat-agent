@@ -19,6 +19,11 @@ export type UtcRange = Readonly<{
   to: Date;
 }>;
 
+export type OptionalUtcRange = Readonly<{
+  from?: Date;
+  to?: Date;
+}>;
+
 function localStartOfDay(day: string, timezone: string): DateTime {
   const validDay = calendarDaySchema.parse(day);
   const validTimezone = timezoneSchema.parse(timezone);
@@ -56,6 +61,24 @@ export function localDateRangeToUtc(
   return {
     from: from.toUTC().toJSDate(),
     to: to.toUTC().toJSDate(),
+  };
+}
+
+export function localDateBoundsToUtc(
+  fromDay: string | undefined,
+  toDay: string | undefined,
+  timezone: string,
+): OptionalUtcRange {
+  const from = fromDay ? localStartOfDay(fromDay, timezone) : undefined;
+  const to = toDay
+    ? localStartOfDay(toDay, timezone).plus({ days: 1 })
+    : undefined;
+  if (from && to && to <= from) {
+    throw new Error("The end day must be on or after the start day");
+  }
+  return {
+    ...(from ? { from: from.toUTC().toJSDate() } : {}),
+    ...(to ? { to: to.toUTC().toJSDate() } : {}),
   };
 }
 

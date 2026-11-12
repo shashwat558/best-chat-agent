@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   localCalendarDay,
+  localDateBoundsToUtc,
   localDateRangeToUtc,
   localDayToUtcRange,
 } from "./time.ts";
@@ -37,4 +38,13 @@ test("renders a date using the supplied timezone", () => {
     localCalendarDay(new Date("2026-11-02T20:00:00.000Z"), "Asia/Kolkata"),
     "2026-11-03",
   );
+});
+
+test("converts one-sided local date bounds", () => {
+  assert.deepEqual(localDateBoundsToUtc("2026-11-03", undefined, "Asia/Kolkata"), {
+    from: new Date("2026-11-02T18:30:00.000Z"),
+  });
+  assert.deepEqual(localDateBoundsToUtc(undefined, "2026-11-03", "Asia/Kolkata"), {
+    to: new Date("2026-11-03T18:30:00.000Z"),
+  });
 });

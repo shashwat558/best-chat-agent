@@ -5,6 +5,7 @@ import {
   type UIMessage,
 } from "ai";
 import { ZodError } from "zod";
+import { buildAgentContext } from "@/lib/agent/context";
 import { runAgent } from "@/lib/agent/run";
 import { createExaSearchProvider } from "@/lib/agent/search-provider";
 import { createTools } from "@/lib/agent/tools";
@@ -16,7 +17,6 @@ import {
 import {
   authorizeOrCreateConversation,
   loadConversationMessages,
-  loadRecentMessages,
   ownsConversation,
   saveAssistantMessage,
   saveUserMessage,
@@ -106,10 +106,13 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   await saveUserMessage({ conversationId, userId, content: message });
-  const [history] = await Promise.all([
-    loadRecentMessages(conversationId, userId),
-    upsertUserTimezone(userId, timezone),
-  ]);
+  await upsertUserTimezone(userId, timezone);
+  const context = await buildAgentContext({
+    userId,
+    conversationId,
+    latestMessage: message,
+    timezone,
+  });
   const assistantMessageId = randomUUID();
   const turnState = createTurnState();
   const tools = createTools({
@@ -119,8 +122,16 @@ export async function POST(request: Request): Promise<Response> {
     turnState,
   });
   const result = runAgent(
-    history.map((item) => ({ role: item.role, content: item.content })),
-    { timezone, tools, abortSignal: request.signal },
+    context.history,
+    {
+      timezone,
+      tools,
+      now: context.now,
+      renderedNow: context.renderedNow,
+      profile: context.profile,
+      facts: context.facts,
+      abortSignal: request.signal,
+    },
   );
 
   return createUIMessageStreamResponse({
@@ -170,14 +181,23 @@ export async function POST(request: Request): Promise<Response> {
             conversationId,
             userHash,
             steps: steps.length,
-            toolCalls: turnState.searchCalls.map((call) => ({
-              name: "webSearch",
-              query: call.query,
-              durationMs: call.durationMs,
-              attempts: call.attempts,
-              resultCount: call.results.length,
-              ...(call.error ? { error: call.error } : {}),
-            })),
+            toolCalls: [
+              ...turnState.searchCalls.map((call) => ({
+                name: "webSearch",
+                query: call.query,
+                durationMs: call.durationMs,
+                attempts: call.attempts,
+                resultCount: call.results.length,
+                ...(call.error ? { error: call.error } : {}),
+              })),
+              ...turnState.recallCalls.map((call) => ({
+                name: "recall",
+                query: call.query,
+                durationMs: call.durationMs,
+                resultCount: call.results.length,
+                ...(call.error ? { error: call.error } : {}),
+              })),
+            ],
             searchLatencyMs: turnState.searchCalls.reduce(
               (total, call) => total + call.durationMs,
               0,
@@ -189,9 +209,14 @@ export async function POST(request: Request): Promise<Response> {
             },
             citationCount: citations.length,
             invalidCitations,
-            errors: turnState.searchCalls
-              .filter((call) => call.error)
-              .map((call) => call.error),
+            errors: [
+              ...turnState.searchCalls
+                .filter((call) => call.error)
+                .map((call) => call.error),
+              ...turnState.recallCalls
+                .filter((call) => call.error)
+                .map((call) => call.error),
+            ],
           });
         } catch (error) {
           logStructured("error", "assistant_message_persist_failed", {

@@ -6,8 +6,10 @@ const validEnvironment = {
   DATABASE_URL: "postgresql://user:password@example.com/database",
   GROQ_API_KEY: "groq-test-key",
   EXA_API_KEY: "exa-test-key",
+  GEMINI_API_KEY: "gemini-test-key",
   CHAT_MODEL: "chat-model",
   FAST_MODEL: "fast-model",
+  EMBEDDING_MODEL: "gemini-embedding-2",
   COOKIE_SECRET: "a-cookie-secret-with-at-least-32-characters",
   NODE_ENV: "test",
 };
@@ -24,6 +26,7 @@ test("reports every missing required variable", () => {
       assert.match(error.message, /DATABASE_URL/);
       assert.match(error.message, /GROQ_API_KEY/);
       assert.match(error.message, /EXA_API_KEY/);
+      assert.match(error.message, /GEMINI_API_KEY/);
       assert.match(error.message, /COOKIE_SECRET/);
       return true;
     },
@@ -37,13 +40,10 @@ test("rejects placeholder API keys", () => {
   );
 });
 
-test("requires complete embedding configuration when enabled", () => {
-  assert.throws(
-    () =>
-      parseConfig({
-        ...validEnvironment,
-        EMBEDDING_MODEL: "embedding-model",
-      }),
-    /EMBEDDING_API_KEY, EMBEDDING_BASE_URL, and EMBEDDING_MODEL must be set together/,
+test("defaults the Google embedding model when omitted", () => {
+  assert.equal(
+    parseConfig({ ...validEnvironment, EMBEDDING_MODEL: undefined })
+      .EMBEDDING_MODEL,
+    "gemini-embedding-2",
   );
 });

@@ -1,6 +1,5 @@
 import { stepCountIs, streamText } from "ai";
 import { models } from "../models";
-import { formatCurrentTime } from "../time";
 import { buildSystemPrompt } from "./prompt";
 import type { createTools } from "./tools";
 
@@ -17,6 +16,9 @@ export function runAgent(
     timezone: string;
     tools: AgentTools;
     now?: Date;
+    renderedNow?: string;
+    profile?: string;
+    facts?: string[];
     abortSignal?: AbortSignal;
   }>,
 ) {
@@ -24,8 +26,10 @@ export function runAgent(
   return streamText({
     model: models.chat,
     instructions: buildSystemPrompt({
-      now: formatCurrentTime(now, options.timezone),
+      now: options.renderedNow ?? now.toISOString(),
       timezone: options.timezone,
+      profile: options.profile,
+      facts: options.facts,
     }),
     messages,
     tools: options.tools,

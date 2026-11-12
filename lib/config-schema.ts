@@ -17,41 +17,22 @@ const apiKeySchema = z
     "must not be a placeholder",
   );
 
-const optionalEnvironmentValue = <T extends z.ZodType>(schema: T) =>
-  z.preprocess((value) => (value === "" ? undefined : value), schema.optional());
-
 const environmentSchema = z
   .object({
     DATABASE_URL: databaseUrlSchema,
     GROQ_API_KEY: apiKeySchema,
     EXA_API_KEY: apiKeySchema,
+    GEMINI_API_KEY: apiKeySchema,
     CHAT_MODEL: z.string().trim().min(1, "is required"),
     FAST_MODEL: z.string().trim().min(1, "is required"),
-    EMBEDDING_API_KEY: optionalEnvironmentValue(apiKeySchema),
-    EMBEDDING_BASE_URL: optionalEnvironmentValue(z.url()),
-    EMBEDDING_MODEL: optionalEnvironmentValue(
-      z.string().trim().min(1, "is required"),
+    EMBEDDING_MODEL: z.preprocess(
+      (value) => (value === "" ? undefined : value),
+      z.string().trim().min(1, "is required").default("gemini-embedding-2"),
     ),
     COOKIE_SECRET: z.string().min(32, "must contain at least 32 characters"),
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
-  })
-  .superRefine((value, context) => {
-    const embeddingValues = [
-      value.EMBEDDING_API_KEY,
-      value.EMBEDDING_BASE_URL,
-      value.EMBEDDING_MODEL,
-    ];
-
-    if (embeddingValues.some(Boolean) && !embeddingValues.every(Boolean)) {
-      context.addIssue({
-        code: "custom",
-        path: ["EMBEDDING_API_KEY"],
-        message:
-          "EMBEDDING_API_KEY, EMBEDDING_BASE_URL, and EMBEDDING_MODEL must be set together",
-      });
-    }
   });
 
 export type AppConfig = Readonly<z.infer<typeof environmentSchema>>;

@@ -15,6 +15,8 @@ flowchart LR
   Agent --> Search[webSearch tool]
   Recall --> DB
   Search --> Provider[Exa API]
+  Context --> Embeddings[Gemini Embedding 2]
+  Recall --> Embeddings
   Route -. after response .-> Writer[Memory writer]
   Writer --> DB
 ```
@@ -55,6 +57,9 @@ flowchart TD
   overwriting history.
 - Facts, claims, messages, and digests support keyword retrieval. Facts, claims,
   and digests also use 1536-dimension embeddings and cosine HNSW indexes.
+- Gemini Embedding 2 is explicitly requested at 1536 dimensions. Recall fuses
+  vector and full-text candidates with reciprocal rank fusion; date-only lookups
+  fall back to chronological rows inside the user's local-day range.
 
 ## Trust boundaries
 
