@@ -214,6 +214,19 @@ async function claimCandidates(
         .limit(CANDIDATE_LIMIT)
     : Promise.resolve([]);
   const [keyword, vector] = await Promise.all([keywordPromise, vectorPromise]);
+  if (
+    keyword.length === 0 &&
+    vector.length === 0 &&
+    (params.from || params.to)
+  ) {
+    const chronological = await db
+      .select(selection)
+      .from(claims)
+      .where(and(...base))
+      .orderBy(desc(claims.observedAt))
+      .limit(CANDIDATE_LIMIT);
+    return ranked(chronological.map(toItem), "date");
+  }
   return [
     ...ranked(vector.map(toItem), "vector"),
     ...ranked(keyword.map(toItem), "keyword"),

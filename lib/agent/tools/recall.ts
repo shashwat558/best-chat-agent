@@ -69,7 +69,7 @@ export async function runRecall(
 export function createRecallTool(input: RecallDependencies) {
   return tool({
     description:
-      "Recall the user's facts, prior web claims, raw messages, or daily digests. Use for earlier conversations, specific dates, and personal context not already in the prompt. Dates are local YYYY-MM-DD calendar days. For a date-only lookup, pass an empty query so results are chronological.",
+      "Recall the user's facts, prior web claims, raw messages, or daily digests. Use kinds: [claims] when re-checking whether an earlier web answer is still valid; a message is not a substitute for the claim ledger. Use for earlier conversations, specific dates, and personal context not already in the prompt. Dates are local YYYY-MM-DD calendar days. For a date-only lookup, pass an empty query so results are chronological.",
     inputSchema: recallInputSchema,
     execute: (arguments_) => runRecall(input, arguments_),
   });

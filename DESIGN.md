@@ -62,6 +62,12 @@ flowchart TD
   claims through their assistant message, and daily digests through user and
   local day. Fact replacements insert the new row and supersede the old row in
   one database batch.
+- Recheck turns must recall claim-ledger rows before searching again. The writer
+  reloads those claim ids under the server-side user id, compares them with only
+  that turn's fresh search evidence, and appends a deterministic claim check.
+  Changed claims atomically create a replacement and supersede the old row;
+  still-valid checks only advance verification time and never revive an already
+  superseded claim.
 - Facts, claims, messages, and digests support keyword retrieval. Facts, claims,
   and digests also use 1536-dimension embeddings and cosine HNSW indexes.
 - Gemini Embedding 2 is explicitly requested at 1536 dimensions. Recall fuses
