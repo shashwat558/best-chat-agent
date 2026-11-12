@@ -1,10 +1,14 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Hearth
+
+A private research chat agent with web search and durable, user-controlled
+memory. The full setup and evaluation guide will be completed in Phase 8.
 
 ## Getting Started
 
-First, run the development server:
+Install dependencies and run the development server:
 
 ```bash
+npm install
 npm run dev
 ```
 
@@ -28,3 +32,10 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Known limitation
+
+Chat rate limiting is intentionally in memory for this assessment. It limits a
+single warm server instance, but counters are not shared across serverless
+instances and reset when an instance restarts. Production deployments should
+replace it with a shared rate-limit store.

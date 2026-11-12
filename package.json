@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:unit": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test lib/config-schema.test.mts lib/time.test.mts lib/identity-token.test.mts lib/agent/web-search.test.mts lib/agent/recall.test.mts lib/agent/prompt.test.mts",
+    "test:unit": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test lib/config-schema.test.mts lib/time.test.mts lib/identity-token.test.mts lib/rate-limit.test.mts lib/agent/web-search.test.mts lib/agent/recall.test.mts lib/agent/prompt.test.mts",
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",

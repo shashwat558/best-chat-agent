@@ -27,6 +27,7 @@ import { config } from "@/lib/config";
 import { getUserId } from "@/lib/identity";
 import { hashUserId, logStructured } from "@/lib/logger";
 import { runMemoryWriter } from "@/lib/memory/writer";
+import { checkRateLimit } from "@/lib/rate-limit";
 import {
   chatHistoryQuerySchema,
   chatRequestSchema,
@@ -34,6 +35,8 @@ import {
 } from "@/lib/schemas";
 
 export const maxDuration = 120;
+
+const REQUEST_TIMEOUT_MS = 90_000;
 
 function notFoundResponse(): Response {
   return Response.json({ error: "conversation_not_found" }, { status: 404 });
@@ -96,6 +99,21 @@ export async function POST(request: Request): Promise<Response> {
 
   const userId = await getUserId();
   const userHash = hashUserId(userId);
+  const rateLimit = checkRateLimit(userId);
+  if (!rateLimit.allowed) {
+    logStructured("warn", "chat_rate_limited", { userHash });
+    return Response.json(
+      { error: "rate_limited" },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(rateLimit.retryAfterSeconds),
+          "X-RateLimit-Limit": String(rateLimit.limit),
+          "X-RateLimit-Remaining": "0",
+        },
+      },
+    );
+  }
   const { conversationId, message, timezone } = parsed.data;
   const authorized = await authorizeOrCreateConversation({
     conversationId,
@@ -132,7 +150,10 @@ export async function POST(request: Request): Promise<Response> {
       renderedNow: context.renderedNow,
       profile: context.profile,
       facts: context.facts,
-      abortSignal: request.signal,
+      abortSignal: AbortSignal.any([
+        request.signal,
+        AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      ]),
     },
   );
   type WriterInput = Parameters<typeof runMemoryWriter>[0];

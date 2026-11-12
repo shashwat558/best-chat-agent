@@ -19,6 +19,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { conversationListResponseSchema } from "@/lib/schemas";
+import { MemoryPanel } from "@/components/memory-panel";
 
 type ConversationSummary = z.infer<
   typeof conversationListResponseSchema
@@ -237,7 +238,8 @@ export default function ClaudeSidebar({
       </SidebarContent>
 
       <SidebarFooter className="p-3">
-        <div className="flex items-center gap-2 border-t border-sidebar-border/70 pt-2.5 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:border-0 group-data-[collapsible=icon]:pt-0">
+        <div className="border-t border-sidebar-border/70 pt-2.5 group-data-[collapsible=icon]:border-0 group-data-[collapsible=icon]:pt-0">
+          <MemoryPanel />
           <p className="min-w-0 truncate text-[11px] text-muted-foreground group-data-[collapsible=icon]:hidden">
             Private memory · scoped to this browser
           </p>

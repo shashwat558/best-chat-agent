@@ -45,6 +45,23 @@ export const conversationListResponseSchema = z.object({
   conversations: z.array(conversationSummarySchema),
 });
 
+export const memoryFactSchema = z.object({
+  id: z.uuid(),
+  factText: z.string(),
+  category: z.string(),
+  aliases: z.array(z.string()),
+  confidence: z.number().min(0).max(1),
+  lastConfirmedAt: z.iso.datetime(),
+});
+
+export const memoryListResponseSchema = z.object({
+  facts: z.array(memoryFactSchema),
+});
+
+export const memoryDeleteRequestSchema = z.object({
+  factId: z.uuid(),
+});
+
 export const memoryQuerySchema = z.object({
   query: z.string().optional(),
   from: z.coerce.date().optional(),

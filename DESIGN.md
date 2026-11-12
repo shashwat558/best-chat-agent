@@ -82,6 +82,11 @@ flowchart TD
 - Answer citations are checked against the per-turn source registry.
 - Search, embedding, and writer failures are observable and have explicit
   degraded behavior.
+- Chat POSTs use a per-user in-memory fixed-window limiter and a request-wide
+  agent timeout. Web search has its own shorter timeout and one retry.
+- Memory management exposes active facts only. Deletion is a scoped tombstone;
+  the profile is cleared before best-effort regeneration, so a failed writer can
+  never leave deleted content in the always-on profile block.
 
 `lib/agent/**` and `lib/memory/**` remain framework-free. Next.js route handlers
 own cookies, streaming response adaptation, and `after()` scheduling.

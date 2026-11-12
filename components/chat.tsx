@@ -209,6 +209,16 @@ function browserTimezone(): string {
   return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
 }
 
+function chatErrorLabel(error: Error): string {
+  if (error.message.includes("rate_limited") || error.message.includes("429")) {
+    return "Too many messages. Try again in about a minute.";
+  }
+  if (/failed to fetch|network|load failed/i.test(error.message)) {
+    return "Network unavailable. Check your connection and try again.";
+  }
+  return "The response failed. Please try again.";
+}
+
 function ChatSession({
   conversationId,
   onNewChat,
@@ -415,7 +425,7 @@ function ChatSession({
             )}
             {error && (
               <div className="rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-3">
-                <AiStatus state="error" label="The response failed" />
+                <AiStatus state="error" label={chatErrorLabel(error)} />
               </div>
             )}
             <div ref={messagesEndRef} />
