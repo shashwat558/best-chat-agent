@@ -130,13 +130,11 @@ export default function ClaudeSidebar({
   };
 
   return (
-    <Sidebar collapsible="icon" className="border-r-0">
-      <SidebarHeader className="px-3 pb-2 pt-4">
+    <Sidebar collapsible="icon">
+      <SidebarHeader className="px-3 pb-3 pt-4">
         <div className="flex h-9 items-center gap-2 overflow-hidden px-1.5 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-          <span className="grid size-7 shrink-0 place-items-center rounded-md bg-primary text-primary-foreground">
-            <MessageSquare className="size-3.5" />
-          </span>
-          <p className="truncate text-[15px] font-semibold tracking-[-0.01em] group-data-[collapsible=icon]:hidden">
+
+          <p className="truncate text-md font-semibold tracking-[-0.01em] group-data-[collapsible=icon]:hidden">
             Hearth
           </p>
         </div>
@@ -150,7 +148,7 @@ export default function ClaudeSidebar({
                 <SidebarMenuButton
                   tooltip="New chat"
                   onClick={startNewChat}
-                  className="h-9 rounded-md bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90 hover:text-sidebar-primary-foreground"
+                  className="h-9 rounded-lg border border-sidebar-border bg-card text-sidebar-foreground shadow-none hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                 >
                   <Plus />
                   <span>New chat</span>
@@ -168,7 +166,7 @@ export default function ClaudeSidebar({
             >
               Search conversations
             </label>
-            <div className="group relative flex h-9 items-center gap-2 rounded-md border border-transparent bg-muted/60 px-2.5 transition-colors focus-within:border-border focus-within:bg-background">
+            <div className="group relative flex h-9 items-center gap-2 rounded-lg border border-transparent bg-transparent px-2.5 transition-colors hover:bg-sidebar-accent/60 focus-within:border-sidebar-border focus-within:bg-card">
               <Search className="size-3.5 shrink-0 text-muted-foreground" />
               <input
                 ref={inputRef}
@@ -222,7 +220,7 @@ export default function ClaudeSidebar({
                       isActive={conversation.id === activeId}
                       tooltip={conversation.title || "Untitled chat"}
                       onClick={() => selectConversation(conversation.id)}
-                      className="h-auto min-h-8 items-center py-1.5"
+                      className="h-auto min-h-8 items-center rounded-lg py-1.5"
                     >
                       <MessageSquare className="size-3.5 shrink-0 opacity-60" />
                       <span className="truncate text-[13px] leading-5">

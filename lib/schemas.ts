@@ -54,8 +54,18 @@ export const memoryFactSchema = z.object({
   lastConfirmedAt: z.iso.datetime(),
 });
 
+export const memoryClaimSchema = z.object({
+  id: z.uuid(),
+  claimText: z.string(),
+  status: z.enum(["current", "outdated"]),
+  volatility: z.enum(["high", "medium", "static"]),
+  observedAt: z.iso.datetime(),
+  lastVerifiedAt: z.iso.datetime().nullable(),
+});
+
 export const memoryListResponseSchema = z.object({
   facts: z.array(memoryFactSchema),
+  claims: z.array(memoryClaimSchema),
 });
 
 export const memoryDeleteRequestSchema = z.object({

@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/sidebar";
 import { WebSearch, type WebSource } from "@/components/ui/web-search";
 import { ChatMarkdown } from "@/components/ui/chat-markdown";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { chatHistoryResponseSchema } from "@/lib/schemas";
 
 const ACTIVE_CONVERSATION_KEY = "active-conversation-id";
@@ -324,8 +325,8 @@ function ChatSession({
   return (
     <SidebarProvider
       defaultOpen
-      className="h-dvh min-h-0 overflow-hidden bg-sidebar"
-      style={{ "--sidebar-width": "17rem" } as React.CSSProperties}
+      className="h-dvh min-h-0 overflow-hidden bg-background"
+      style={{ "--sidebar-width": "15.5rem" } as React.CSSProperties}
     >
       <ClaudeSidebar
         activeId={conversationId}
@@ -333,8 +334,8 @@ function ChatSession({
         onNewChat={onNewChat}
         refreshKey={listTick}
       />
-      <SidebarInset className="h-dvh min-w-0 overflow-hidden bg-background md:my-2 md:mr-2 md:rounded-lg md:border md:border-border/70 md:shadow-sm">
-        <header className="flex h-14 shrink-0 items-center justify-between border-b border-border/60 px-3 sm:px-5">
+      <SidebarInset className="h-dvh min-w-0 overflow-hidden bg-background">
+        <header className="flex h-14 shrink-0 items-center justify-between border-b border-border/70 px-3 sm:px-5">
           <div className="flex items-center gap-2">
             <SidebarTrigger className="rounded-md text-muted-foreground" />
             <div className="flex items-center gap-2 md:hidden">
@@ -344,9 +345,12 @@ function ChatSession({
               <span className="text-sm font-semibold">Hearth</span>
             </div>
           </div>
-          <div className="flex items-center gap-1.5 rounded-md border border-border/60 bg-card/70 px-2.5 py-1 text-xs text-muted-foreground">
-            <LockKeyhole className="size-3" />
-            <span>Private</span>
+          <div className="flex items-center gap-1">
+            <div className="mr-1 hidden items-center gap-1.5 text-xs text-muted-foreground sm:flex">
+              <LockKeyhole className="size-3" />
+              <span>Private</span>
+            </div>
+            <ThemeToggle />
           </div>
         </header>
 
@@ -354,7 +358,7 @@ function ChatSession({
           aria-live="polite"
           className="min-h-0 flex-1 overflow-y-auto scroll-smooth"
         >
-          <div className="relative mx-auto flex min-h-full w-full max-w-3xl flex-col gap-7 px-4 py-8 sm:px-8 sm:py-10">
+          <div className="relative mx-auto flex min-h-full w-full max-w-[50rem] flex-col gap-8 px-4 py-8 sm:px-8 sm:py-10">
             {historyStatus === "loading" && (
               <div className="my-auto flex justify-center">
                 <AiStatus state="thinking" label="Opening your space" />
@@ -387,6 +391,7 @@ function ChatSession({
                   <AquariumPrompt
                     title="What are we exploring?"
                     placeholder="Message Hearth…"
+                    className="!h-[390px] !max-w-[780px] !rounded-[22px] !shadow-[0_1px_2px_rgba(15,23,42,.08),0_12px_32px_-24px_rgba(15,23,42,.3)] sm:!h-[420px]"
                     onSubmit={(text) => {
                       void sendMessage({ text });
                     }}
@@ -401,7 +406,7 @@ function ChatSession({
                   key={message.id}
                     className={
                       message.role === "user"
-                        ? "ml-auto max-w-[88%] rounded-lg rounded-br-sm bg-secondary px-4 py-2.5 text-secondary-foreground sm:max-w-[78%]"
+                        ? "ml-auto max-w-[88%] rounded-2xl rounded-br-md bg-secondary px-4 py-2.5 text-secondary-foreground sm:max-w-[78%]"
                         : "w-full"
                     }
                 >
@@ -440,10 +445,10 @@ function ChatSession({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 28 }}
               transition={{ duration: 0.35, ease: "easeOut" }}
-              className="shrink-0 bg-gradient-to-t from-background via-background to-background/0 px-3 pb-3 pt-2 sm:px-6 sm:pb-5"
+              className="shrink-0 bg-background px-3 pb-3 pt-2 sm:px-6 sm:pb-5"
             >
           <form
-            className="mx-auto w-full max-w-3xl rounded-lg border border-border/80 bg-card p-2 shadow-sm focus-within:border-ring/60"
+            className="mx-auto w-full max-w-[50rem] rounded-2xl border border-border bg-card p-2 shadow-[0_8px_30px_-22px_rgba(15,23,42,.35)] transition-colors focus-within:border-ring/70"
             onSubmit={(event) => {
               event.preventDefault();
               const message = input.trim();
@@ -485,7 +490,7 @@ function ChatSession({
                   variant="secondary"
                   aria-label="Stop response"
                   onClick={() => void stop()}
-                  className="rounded-full"
+                  className="rounded-full bg-muted text-foreground hover:bg-accent"
                 >
                   <Square className="size-3 fill-current" />
                 </Button>
@@ -502,7 +507,7 @@ function ChatSession({
               )}
             </div>
           </form>
-          <p className="mx-auto mt-2 max-w-3xl text-center text-xs text-muted-foreground/80">
+          <p className="mx-auto mt-2 max-w-[50rem] text-center text-[11px] text-muted-foreground/80">
             Hearth can make mistakes. Check important information.
           </p>
             </motion.div>

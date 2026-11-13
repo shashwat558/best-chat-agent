@@ -1,6 +1,6 @@
 import { and, desc, eq, isNull } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { userFacts, userProfiles } from "@/lib/db/schema";
+import { claims, userFacts, userProfiles } from "@/lib/db/schema";
 import { getUserId } from "@/lib/identity";
 import { hashUserId, logStructured } from "@/lib/logger";
 import { regenerateProfile } from "@/lib/memory/writer";
@@ -11,30 +11,50 @@ import {
 
 export async function GET(): Promise<Response> {
   const userId = await getUserId();
-  const rows = await db
-    .select({
-      id: userFacts.id,
-      factText: userFacts.factText,
-      category: userFacts.category,
-      aliases: userFacts.aliases,
-      confidence: userFacts.confidence,
-      lastConfirmedAt: userFacts.lastConfirmedAt,
-    })
-    .from(userFacts)
-    .where(
-      and(
-        eq(userFacts.userId, userId),
-        isNull(userFacts.supersededBy),
-        isNull(userFacts.deletedAt),
-      ),
-    )
-    .orderBy(desc(userFacts.lastConfirmedAt))
-    .limit(100);
+  const [factRows, claimRows] = await Promise.all([
+    db
+      .select({
+        id: userFacts.id,
+        factText: userFacts.factText,
+        category: userFacts.category,
+        aliases: userFacts.aliases,
+        confidence: userFacts.confidence,
+        lastConfirmedAt: userFacts.lastConfirmedAt,
+      })
+      .from(userFacts)
+      .where(
+        and(
+          eq(userFacts.userId, userId),
+          isNull(userFacts.supersededBy),
+          isNull(userFacts.deletedAt),
+        ),
+      )
+      .orderBy(desc(userFacts.lastConfirmedAt))
+      .limit(100),
+    db
+      .select({
+        id: claims.id,
+        claimText: claims.claimText,
+        status: claims.status,
+        volatility: claims.volatility,
+        observedAt: claims.observedAt,
+        lastVerifiedAt: claims.lastVerifiedAt,
+      })
+      .from(claims)
+      .where(eq(claims.userId, userId))
+      .orderBy(desc(claims.observedAt))
+      .limit(30),
+  ]);
 
   const payload = memoryListResponseSchema.parse({
-    facts: rows.map((row) => ({
+    facts: factRows.map((row) => ({
       ...row,
       lastConfirmedAt: row.lastConfirmedAt.toISOString(),
+    })),
+    claims: claimRows.map((row) => ({
+      ...row,
+      observedAt: row.observedAt.toISOString(),
+      lastVerifiedAt: row.lastVerifiedAt?.toISOString() ?? null,
     })),
   });
   return Response.json(payload, {
