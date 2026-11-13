@@ -16,6 +16,7 @@ flowchart LR
   Recall --> DB
   Search --> Provider[Exa API]
   Context --> Embeddings[Gemini Embedding 2]
+  Agent --> ChatModel[Gemini 3.5 Flash-Lite]
   Recall --> Embeddings
   Route -. after response .-> Writer[Memory writer]
   Writer --> DB
